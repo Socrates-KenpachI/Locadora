@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Locadora de Veículos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=Figtree:wght@400;500;600&display=swap">
+<style>
+:root{--bg:#F2F4F1;--surface:#fff;--ink:#12292D;--muted:#5B6F72;--line:#D5DCD8;--btn:#12343B;--btn-ink:#fff;--hi:#E9A100;--ok:#24703F;--bad:#B3392E;--plate:#1E4FA3;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0F1A1C;--surface:#16262A;--ink:#E7EEEC;--muted:#93A8AB;--line:#2A3E42;--btn:#E9A100;--btn-ink:#1A1200;--ok:#6CC58A;--bad:#F08B7F;--plate:#5B8DE0;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0F1A1C;--surface:#16262A;--ink:#E7EEEC;--muted:#93A8AB;--line:#2A3E42;--btn:#E9A100;--btn-ink:#1A1200;--ok:#6CC58A;--bad:#F08B7F;--plate:#5B8DE0;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.5 Figtree,system-ui,sans-serif}
+header{padding:28px 20px 0;max-width:980px;margin:0 auto}
+h1{font:800 clamp(28px,5vw,40px)/1.1 "Bricolage Grotesque",Figtree,sans-serif;margin:0 0 4px;letter-spacing:-.02em}
+header p{margin:0;color:var(--muted)}
+nav{display:flex;gap:4px;overflow-x:auto;margin-top:20px;border-bottom:1px solid var(--line)}
+nav button{background:none;border:0;border-bottom:3px solid transparent;color:var(--muted);font:600 15px Figtree,sans-serif;padding:10px 12px;cursor:pointer;white-space:nowrap}
+nav button[aria-current=page]{color:var(--ink);border-bottom-color:var(--hi)}
+main{max-width:980px;margin:0 auto;padding:24px 20px 56px}
+h2{font:600 22px/1.2 "Bricolage Grotesque",Figtree,sans-serif;margin:0 0 14px}
+h3{font:600 17px "Bricolage Grotesque",Figtree,sans-serif;margin:32px 0 10px}
+form{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;align-items:end;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:20px}
+label{display:flex;flex-direction:column;gap:4px;font-size:14px;color:var(--muted);font-weight:500}
+input,select{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:9px 10px;min-width:0}
+input[type=checkbox]{width:18px;height:18px;accent-color:var(--btn)}
+label.chk{flex-direction:row;align-items:center;gap:8px;color:var(--ink);padding-bottom:9px}
+button.primary{background:var(--btn);color:var(--btn-ink);border:0;border-radius:6px;padding:10px 16px;font:600 15px Figtree,sans-serif;cursor:pointer}
+button.small{background:none;border:1px solid var(--line);color:var(--ink);border-radius:6px;padding:4px 10px;font:500 14px Figtree,sans-serif;cursor:pointer}
+:focus-visible{outline:2px solid var(--hi);outline-offset:2px}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:15px}
+th{text-align:left;font-weight:600;color:var(--muted);font-size:14px;padding:8px 10px;border-bottom:1px solid var(--line)}
+td{padding:10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+.plate{display:inline-block;font-weight:800;letter-spacing:.08em;border:2px solid var(--ink);border-top:6px solid var(--plate);border-radius:4px;padding:0 8px;background:var(--surface)}
+.tag{font-weight:600;font-size:13px;padding:2px 8px;border-radius:99px;border:1px solid currentColor}
+.tag.ok{color:var(--ok)}.tag.bad{color:var(--bad)}
+#note{min-height:24px;margin-bottom:10px;font-weight:600}
+#note.ok{color:var(--ok)}#note.bad{color:var(--bad)}
+.empty{color:var(--muted);padding:16px 0}
+dl{margin:0;display:grid;grid-template-columns:1fr auto;gap:6px 24px;max-width:420px}
+dt{color:var(--muted)}dd{margin:0;text-align:right;font-variant-numeric:tabular-nums}
+dl .tot{font:800 26px "Bricolage Grotesque",Figtree,sans-serif;color:var(--ink)}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:20px}
+@media (prefers-reduced-motion:no-preference){main{animation:in .25s ease-out}@keyframes in{from{opacity:.4}to{opacity:1}}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Locadora de Veículos</h1>
+  <p>Cadastros, locações com desconto e seguro, e faturamento da frota.</p>
+  <nav id="nav" aria-label="Seções"></nav>
+</header>
+<main>
+  <div id="note" role="status"></div>
+  <div id="view"></div>
+</main>
+<script>
+const K = "locadora:v1";
+let S = { veiculos: [], clientes: [], colaboradores: [], locacoes: [] };
+try { const r = localStorage.getItem(K); if (r) S = Object.assign(S, JSON.parse(r)); } catch (e) {}
+const save = () => { try { localStorage.setItem(K, JSON.stringify(S)); } catch (e) {} };
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const brl = n => "R$ " + Number(n).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const r2 = n => Math.round(n * 100) / 100;
+const br = iso => iso ? iso.split("-").reverse().join("/") : "";
+const pad = n => String(n).padStart(2, "0");
+const iso = d => d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+
+// Regras de negócio (iguais ao código Python)
+const PCT_SEGURO = 0.25;
+const TABELA = [[30, .20], [15, .15], [7, .10], [3, .05]];
+const desconto = dias => { for (const [m, d] of TABELA) if (dias >= m) return d; return 0; };
+function calcular(diaria, dias, seguro) {
+  const bruto = diaria * dias, pct = desconto(dias), desc = bruto * pct, sub = bruto - desc;
+  const sg = seguro ? sub * PCT_SEGURO : 0;
+  return { bruto: r2(bruto), pct, desconto: r2(desc), seguro: r2(sg), total: r2(sub + sg) };
+}
+const resumo = r => `<dl><dt>Valor bruto</dt><dd>${brl(r.bruto)}</dd>
+<dt>Desconto (${Math.round(r.pct * 100)}%)</dt><dd>${brl(r.desconto)}</dd>
+<dt>Seguro (25%)</dt><dd>${brl(r.seguro)}</dd>
+<dt class="tot">Total</dt><dd class="tot">${brl(r.total)}</dd></dl>`;
+
+const F = (n, l, t = "text", x = "") => `<label>${l}<input name="${n}" type="${t}" ${x} required></label>`;
+const table = (heads, rows, empty) => rows.length
+  ? `<div class="scroll"><table><thead><tr>${heads.map((h, i) => `<th${h[0] === "#" ? ' class="n"' : ""}>${h.replace(/^#/, "")}</th>`).join("")}</tr></thead><tbody>${rows.join("")}</tbody></table></div>`
+  : `<p class="empty">${empty}</p>`;
+const plate = p => `<span class="plate">${esc(p)}</span>`;
+const nomeVeic = p => { const v = S.veiculos.find(x => x.placa === p); return v ? `${v.marca} ${v.modelo}` : "-"; };
+
+const tabs = [["frota", "Frota"], ["clientes", "Clientes"], ["equipe", "Colaboradores"], ["locar", "Nova locação"], ["locacoes", "Locações"], ["rel", "Relatórios"]];
+let tab = "frota";
+
+const views = {
+  frota: () => `<h2>Frota</h2>
+<form data-f="veiculo">${F("placa", "Placa", "text", 'maxlength="8"')}${F("marca", "Marca")}${F("modelo", "Modelo")}${F("ano", "Ano", "number", 'min="1980" max="2100"')}${F("diaria", "Diária (R$)", "number", 'min="0" step="0.01"')}<button class="primary">Cadastrar veículo</button></form>
+${table(["Placa", "Veículo", "#Ano", "#Diária", "Situação"], S.veiculos.map(v => `<tr><td>${plate(v.placa)}</td><td>${esc(v.marca)} ${esc(v.modelo)}</td><td class="n">${v.ano}</td><td class="n">${brl(v.diaria)}</td><td><span class="tag ${v.disponivel ? "ok" : "bad"}">${v.disponivel ? "Disponível" : "Alugado"}</span></td></tr>`), "Nenhum veículo cadastrado. Use o formulário acima para adicionar o primeiro.")}`,
+
+  clientes: () => `<h2>Clientes</h2>
+<form data-f="cliente">${F("cpf", "CPF")}${F("nome", "Nome")}${F("telefone", "Telefone", "tel")}${F("cnh", "CNH")}<button class="primary">Cadastrar cliente</button></form>
+${table(["CPF", "Nome", "Telefone", "CNH"], S.clientes.map(c => `<tr><td>${esc(c.cpf)}</td><td>${esc(c.nome)}</td><td>${esc(c.telefone)}</td><td>${esc(c.cnh)}</td></tr>`), "Nenhum cliente cadastrado.")}`,
+
+  equipe: () => `<h2>Colaboradores</h2>
+<form data-f="colab">${F("matricula", "Matrícula")}${F("nome", "Nome")}${F("cargo", "Cargo")}${F("cpf", "CPF")}<button class="primary">Cadastrar colaborador</button></form>
+${table(["Matrícula", "Nome", "Cargo", "CPF"], S.colaboradores.map(c => `<tr><td>${esc(c.matricula)}</td><td>${esc(c.nome)}</td><td>${esc(c.cargo)}</td><td>${esc(c.cpf)}</td></tr>`), "Nenhum colaborador cadastrado.")}`,
+
+  locar: () => {
+    const livres = S.veiculos.filter(v => v.disponivel);
+    const opt = (arr, f) => arr.map(f).join("");
+    const pronto = livres.length && S.clientes.length && S.colaboradores.length;
+    return `<h2>Nova locação</h2>` + (pronto ? `
+<form data-f="locar">
+<label>Veículo<select name="placa">${opt(livres, v => `<option value="${esc(v.placa)}">${esc(v.placa)} – ${esc(v.marca)} ${esc(v.modelo)} (${brl(v.diaria)}/dia)</option>`)}</select></label>
+<label>Cliente<select name="cpf">${opt(S.clientes, c => `<option value="${esc(c.cpf)}">${esc(c.nome)}</option>`)}</select></label>
+<label>Colaborador<select name="mat">${opt(S.colaboradores, c => `<option value="${esc(c.matricula)}">${esc(c.nome)}</option>`)}</select></label>
+${F("dias", "Dias de locação", "number", 'min="1" step="1" value="1"')}
+<label class="chk"><input type="checkbox" name="seguro"> Incluir seguro (25%)</label>
+<button class="primary">Registrar locação</button></form>
+<div class="box" id="prev"></div>` : `<p class="empty">Para alugar, cadastre ao menos um veículo disponível, um cliente e um colaborador.</p>`) + `
+<h3>Simulador de valores</h3>
+<form data-f="sim">${F("diaria", "Diária (R$)", "number", 'min="0" step="0.01" value="100"')}${F("dias", "Dias", "number", 'min="1" step="1" value="7"')}<label class="chk"><input type="checkbox" name="seguro"> Com seguro</label></form>
+<div class="box" id="simout"></div>`;
+  },
+
+  locacoes: () => `<h2>Locações</h2>` + table(["#Nº", "Placa", "Cliente", "Início", "Devolução", "#Total", "Situação", ""],
+    [...S.locacoes].reverse().map(l => { const c = S.clientes.find(x => x.cpf === l.cpf); return `<tr><td class="n">${l.id}</td><td>${plate(l.placa)}</td><td>${esc(c ? c.nome : l.cpf)}</td><td>${br(l.inicio)}</td><td>${br(l.devolucao)}</td><td class="n">${brl(l.total)}</td><td><span class="tag ${l.finalizada ? "ok" : "bad"}">${l.finalizada ? "Devolvido" : "Em andamento"}</span></td><td>${l.finalizada ? "" : `<button class="small" data-act="devolver" data-id="${l.id}">Devolver</button>`}</td></tr>`; }),
+    "Nenhuma locação registrada."),
+
+  rel: () => {
+    const L = S.locacoes, sum = k => r2(L.reduce((a, l) => a + l[k], 0));
+    const agrupa = (key, nome) => { const m = {}; L.forEach(l => { const t = m[l[key]] ||= [0, 0]; t[0]++; t[1] += l.total; }); return Object.entries(m).sort((a, b) => b[1][1] - a[1][1]).map(([k, [q, v]]) => `<tr><td>${esc(k)}</td><td>${esc(nome(k))}</td><td class="n">${q}</td><td class="n">${brl(v)}</td></tr>`); };
+    if (!L.length) return `<h2>Faturamento da frota</h2><p class="empty">Nenhuma locação registrada ainda.</p>`;
+    return `<h2>Faturamento da frota</h2>
+<div class="box"><dl><dt>Locações realizadas</dt><dd>${L.length}</dd><dt>Valor bruto</dt><dd>${brl(sum("bruto"))}</dd><dt>Descontos</dt><dd>${brl(sum("desconto"))}</dd><dt>Receita de seguros</dt><dd>${brl(sum("seguro"))}</dd><dt class="tot">Faturamento total</dt><dd class="tot">${brl(sum("total"))}</dd></dl></div>
+<h3>Por veículo</h3>${table(["Placa", "Veículo", "#Locações", "#Total"], agrupa("placa", nomeVeic), "")}
+<h3>Por colaborador</h3>${table(["Matrícula", "Nome", "#Locações", "#Total"], agrupa("mat", m => (S.colaboradores.find(c => c.matricula === m) || {}).nome || "-"), "")}
+<h3>Por período</h3>
+<form data-f="per">${`<label>Início<input type="date" id="pi"></label><label>Fim<input type="date" id="pf"></label>`}</form>
+<div class="box" id="per"></div>`;
+  }
+};
+
+function render() {
+  $("#nav").innerHTML = tabs.map(([k, n]) => `<button data-tab="${k}"${k === tab ? ' aria-current="page"' : ""}>${n}</button>`).join("");
+  $("#view").innerHTML = views[tab]();
+  updatePrev(); updateSim(); updatePer();
+}
+function flash(ok, t) { const n = $("#note"); n.className = ok ? "ok" : "bad"; n.textContent = t; }
+
+function updatePrev() {
+  const f = document.querySelector('[data-f="locar"]'); if (!f) return;
+  const d = new FormData(f), v = S.veiculos.find(x => x.placa === d.get("placa")), dias = parseInt(d.get("dias"));
+  $("#prev").innerHTML = v && dias > 0 ? resumo(calcular(v.diaria, dias, d.get("seguro") === "on")) : `<span class="empty">Escolha o veículo e os dias para ver o valor.</span>`;
+}
+function updateSim() {
+  const f = document.querySelector('[data-f="sim"]'); if (!f) return;
+  const d = new FormData(f), dia = parseFloat(d.get("diaria")), dias = parseInt(d.get("dias"));
+  $("#simout").innerHTML = dia >= 0 && dias > 0 ? resumo(calcular(dia, dias, d.get("seguro") === "on")) : `<span class="empty">Informe diária e dias.</span>`;
+}
+function updatePer() {
+  const el = $("#per"); if (!el) return;
+  const a = $("#pi").value, b = $("#pf").value;
+  const sel = S.locacoes.filter(l => (!a || l.inicio >= a) && (!b || l.inicio <= b));
+  el.innerHTML = `Locações: <b>${sel.length}</b> &nbsp; Total: <b>${brl(r2(sel.reduce((s, l) => s + l.total, 0)))}</b>`;
+}
+
+document.addEventListener("click", e => {
+  const t = e.target.closest("[data-tab]");
+  if (t) { tab = t.dataset.tab; $("#note").textContent = ""; render(); return; }
+  const b = e.target.closest('[data-act="devolver"]');
+  if (b) {
+    const l = S.locacoes.find(x => x.id == b.dataset.id && !x.finalizada);
+    if (!l) return flash(false, "Locação não encontrada ou já finalizada.");
+    l.finalizada = true; const v = S.veiculos.find(x => x.placa === l.placa); if (v) v.disponivel = true;
+    save(); render(); flash(true, "Veículo devolvido.");
+  }
+});
+document.addEventListener("input", e => {
+  const k = e.target.closest("form") && e.target.closest("form").dataset.f;
+  if (k === "locar") updatePrev(); else if (k === "sim") updateSim(); else if (k === "per") updatePer();
+});
+document.addEventListener("submit", e => {
+  e.preventDefault();
+  const f = e.target, k = f.dataset.f, d = Object.fromEntries(new FormData(f));
+  try {
+    if (k === "veiculo") {
+      const placa = d.placa.trim().toUpperCase();
+      if (S.veiculos.some(v => v.placa === placa)) throw new Error("Veículo já cadastrado.");
+      S.veiculos.push({ placa, marca: d.marca.trim(), modelo: d.modelo.trim(), ano: +d.ano, diaria: +d.diaria, disponivel: true });
+    } else if (k === "cliente") {
+      if (S.clientes.some(c => c.cpf === d.cpf.trim())) throw new Error("Cliente já cadastrado.");
+      S.clientes.push({ cpf: d.cpf.trim(), nome: d.nome.trim(), telefone: d.telefone.trim(), cnh: d.cnh.trim() });
+    } else if (k === "colab") {
+      if (S.colaboradores.some(c => c.matricula === d.matricula.trim())) throw new Error("Colaborador já cadastrado.");
+      S.colaboradores.push({ matricula: d.matricula.trim(), nome: d.nome.trim(), cargo: d.cargo.trim(), cpf: d.cpf.trim() });
+    } else if (k === "locar") {
+      const v = S.veiculos.find(x => x.placa === d.placa), dias = parseInt(d.dias);
+      if (!v) throw new Error("Veículo não encontrado.");
+      if (!v.disponivel) throw new Error("Veículo indisponível.");
+      if (!(dias > 0)) throw new Error("Dias de locação deve ser maior que zero.");
+      const r = calcular(v.diaria, dias, d.seguro === "on"), hoje = new Date(), fim = new Date(hoje);
+      fim.setDate(fim.getDate() + dias);
+      S.locacoes.push({ id: S.locacoes.length + 1, placa: v.placa, cpf: d.cpf, mat: d.mat, inicio: iso(hoje), dias, comSeguro: d.seguro === "on", bruto: r.bruto, pct: r.pct, desconto: r.desconto, seguro: r.seguro, total: r.total, devolucao: iso(fim), finalizada: false });
+      v.disponivel = false;
+      save(); render(); return flash(true, `Locação ${S.locacoes.length} registrada. Total: ${brl(r.total)}. Devolução em ${br(iso(fim))}.`);
+    } else return;
+    save(); render(); flash(true, "Cadastro salvo.");
+  } catch (err) { flash(false, err.message); }
+});
+render();
+</script>
+</body>
+</html>
